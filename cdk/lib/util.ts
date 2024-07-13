@@ -21,16 +21,39 @@ export const getMinecraftServerConfig = (
 ): MinecraftEditionConfig => {
   const javaConfig = {
     image: constants.JAVA_EDITION_DOCKER_IMAGE,
-    port: 25565,
-    protocol: Protocol.TCP,
-    ingressRulePort: Port.tcp(25565),
+    ports: [
+      {
+        port: 25565,
+        protocol: Protocol.TCP,
+        ingressRulePort: Port.tcp(25565)
+      }
+    ]
   };
 
   const bedrockConfig = {
     image: constants.BEDROCK_EDITION_DOCKER_IMAGE,
-    port: 19132,
-    protocol: Protocol.UDP,
-    ingressRulePort: Port.udp(19132),
+    ports: [
+      {
+        port: 19132,
+        protocol: Protocol.UDP,
+        ingressRulePort: Port.udp(19132)
+      },
+      {
+        port: 19132,
+        protocol: Protocol.TCP,
+        ingressRulePort: Port.tcp(19132)
+      },
+      {
+        port: 19133,
+        protocol: Protocol.UDP,
+        ingressRulePort: Port.udp(19133)
+      },
+      {
+        port: 19133,
+        protocol: Protocol.TCP,
+        ingressRulePort: Port.tcp(19133)
+      }
+    ]
   };
 
   return edition === 'java' ? javaConfig : bedrockConfig;

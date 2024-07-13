@@ -121,13 +121,13 @@ export class MinecraftStack extends Stack {
       {
         containerName: constants.MC_SERVER_CONTAINER_NAME,
         image: ecs.ContainerImage.fromRegistry(minecraftServerConfig.image),
-        portMappings: [
-          {
-            containerPort: minecraftServerConfig.port,
-            hostPort: minecraftServerConfig.port,
-            protocol: minecraftServerConfig.protocol,
-          },
-        ],
+        portMappings: minecraftServerConfig.ports.map(p => {
+          return {
+            containerPort: p.port,
+            hostPort: p.port,
+            protocol: p.protocol,
+          };
+        }),
         environment: config.minecraftImageEnv,
         essential: false,
         taskDefinition,
@@ -155,10 +155,12 @@ export class MinecraftStack extends Stack {
       }
     );
 
-    serviceSecurityGroup.addIngressRule(
-      ec2.Peer.anyIpv4(),
-      minecraftServerConfig.ingressRulePort
-    );
+    minecraftServerConfig.ports.forEach(p => {
+      serviceSecurityGroup.addIngressRule(
+        ec2.Peer.anyIpv4(),
+        p.ingressRulePort
+      );
+    });
 
     const minecraftServerService = new ecs.FargateService(
       this,
@@ -223,7 +225,7 @@ export class MinecraftStack extends Stack {
       'WatchDogContainer',
       {
         containerName: constants.WATCHDOG_SERVER_CONTAINER_NAME,
-        image: isDockerInstalled()
+        image: false //isDockerInstalled()
           ? ecs.ContainerImage.fromAsset(
               path.resolve(__dirname, '../../minecraft-ecsfargate-watchdog/')
             )
@@ -283,6 +285,24 @@ export class MinecraftStack extends Stack {
     });
 
     serviceControlPolicy.attachToRole(ecsTaskRole);
+
+    const executeCommandPolicy = new iam.Policy(this, 'ExecuteCommandPolicy', {
+      statements: [
+        new iam.PolicyStatement({
+          sid: 'AllowExecuteCommand',
+          effect: iam.Effect.ALLOW,
+          actions: [
+            "ssmmessages:CreateControlChannel",
+            "ssmmessages:CreateDataChannel",
+            "ssmmessages:OpenControlChannel",
+            "ssmmessages:OpenDataChannel"
+          ],
+          resources: ["*"],
+        })
+      ]
+    });
+
+    executeCommandPolicy.attachToRole(ecsTaskRole);
 
     /**
      * Add service control policy to the launcher lambda from the other stack

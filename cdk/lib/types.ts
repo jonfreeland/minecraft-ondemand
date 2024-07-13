@@ -154,6 +154,10 @@ export interface MinecraftEditionConfig {
    * @example 'itzg/minecraft-server'
    */
   image: string;
+  ports: Array<PortConfig>;
+}
+
+export interface PortConfig {
   /**
    * Port number to run the Minecraft server on
    */

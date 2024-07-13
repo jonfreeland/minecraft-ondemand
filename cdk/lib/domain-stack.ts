@@ -127,7 +127,7 @@ export class DomainStack extends Stack {
      */
     launcherLambda.addPermission('CWPermission', {
       principal: new iam.ServicePrincipal(
-        `logs.${constants.DOMAIN_STACK_REGION}.amazonaws.com`
+        `logs.amazonaws.com`
       ),
       action: 'lambda:InvokeFunction',
       sourceAccount: this.account,
